@@ -167,7 +167,16 @@ export default function App() {
 
     const mic = new MicCapture();
     micRef.current = mic;
-    await mic.start(stream, (b, rate) => live.sendAudio(b, rate));
+    try {
+      await mic.start(stream, (b, rate) => live.sendAudio(b, rate));
+    } catch (e) {
+      live.close();
+      mic.stop();
+      player.close();
+      stream.getTracks().forEach((t) => t.stop());
+      setError(`Microphone failed to start: ${e instanceof Error ? e.message : e}`);
+      return;
+    }
 
     // ~1 fps JPEG frames so Jax can see form; pose tracking runs separately at camera rate.
     const frameCanvas = document.createElement("canvas");
