@@ -41,6 +41,7 @@ The camera needs HTTPS on a phone. For a quick phone test: `cloudflared tunnel -
 | `JAX_ACCESS_CODE` | no | If set, the app asks for this code before starting a session (protects your quota on a public URL) |
 | `GEMINI_LIVE_MODEL` | no | Default `gemini-3.8-live` |
 | `JAX_VOICE` | no | Prebuilt voice, default `Fenrir` |
+| `TRUST_PROXY` | no | Set to `1` behind a reverse proxy so the rate limit uses `X-Forwarded-For` |
 
 ## Checks
 

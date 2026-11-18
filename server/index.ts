@@ -17,7 +17,9 @@ const MIME: Record<string, string> = {
   ".ico": "image/x-icon",
 };
 
+/** Only trust X-Forwarded-For behind a proxy that sets it (TRUST_PROXY=1); otherwise callers could pick their rate-limit bucket. */
 function clientIp(req: IncomingMessage) {
+  if (!process.env.TRUST_PROXY) return req.socket.remoteAddress || "";
   const fwd = req.headers["x-forwarded-for"];
   return (Array.isArray(fwd) ? fwd[0] : fwd)?.split(",")[0].trim() || req.socket.remoteAddress || "";
 }
