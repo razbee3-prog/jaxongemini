@@ -17,6 +17,7 @@ export class MicCapture {
   private ctx: AudioContext | null = null;
   private node: AudioWorkletNode | null = null;
   private src: MediaStreamAudioSourceNode | null = null;
+  private sink: GainNode | null = null;
   muted = false;
   /** Rough 0..1 input level for the UI. */
   level = 0;
@@ -39,15 +40,19 @@ export class MicCapture {
       this.level = this.muted ? 0 : peak / 32768;
       if (!this.muted) onChunk(bytesToB64(new Uint8Array(e.data)), rate);
     };
-    this.src.connect(this.node);
+    // Route through a muted gain to the destination so every browser keeps pulling (and running) the worklet.
+    this.sink = this.ctx.createGain();
+    this.sink.gain.value = 0;
+    this.src.connect(this.node).connect(this.sink).connect(this.ctx.destination);
     if (this.ctx.state === "suspended") await this.ctx.resume();
   }
 
   stop() {
     this.src?.disconnect();
     this.node?.disconnect();
+    this.sink?.disconnect();
     void this.ctx?.close();
-    this.ctx = this.node = this.src = null;
+    this.ctx = this.node = this.src = this.sink = null;
   }
 }
 
