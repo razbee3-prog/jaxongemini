@@ -75,7 +75,7 @@ export class PoseTracker {
       norm: px.map((p) => ({ x: p.x / w, y: p.y / h, v: p.v })),
       fullBody,
       sideBody,
-      features: computeFeatures(px, fullBody, sideBody),
+      features: computeFeatures(px, fullBody, sideBody, raw),
     };
   }
 }

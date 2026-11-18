@@ -49,7 +49,7 @@ const visible = (raw: Pt[], idx: number[]) => idx.every((i) => raw[i].v > 0.5 &&
 
 export function isFullBody(raw: Pt[] | null): boolean {
   if (!raw || raw.length < 33) return false;
-  return BODY.every((i) => raw[i].v > 0.5 && raw[i].x >= 0 && raw[i].y >= 0 && raw[i].y <= 1.02);
+  return BODY.every((i) => raw[i].v > 0.5 && raw[i].x >= 0 && raw[i].x <= 1 && raw[i].y >= 0 && raw[i].y <= 1.02);
 }
 
 export function isSideBody(raw: Pt[] | null): boolean {
@@ -58,7 +58,7 @@ export function isSideBody(raw: Pt[] | null): boolean {
 }
 
 /** `p` must be in pixel space (aspect-correct) so angles are not distorted. */
-export function computeFeatures(p: Pt[], fullBody: boolean, sideBody = fullBody): PoseFeatures {
+export function computeFeatures(p: Pt[], fullBody: boolean, sideBody = fullBody, raw: Pt[] = p): PoseFeatures {
   const kneeL = angleDeg(p[LM.lHip], p[LM.lKnee], p[LM.lAnkle]);
   const kneeR = angleDeg(p[LM.rHip], p[LM.rKnee], p[LM.rAnkle]);
   const midSh = { x: (p[LM.lShoulder].x + p[LM.rShoulder].x) / 2, y: (p[LM.lShoulder].y + p[LM.rShoulder].y) / 2, v: 1 };
@@ -67,7 +67,10 @@ export function computeFeatures(p: Pt[], fullBody: boolean, sideBody = fullBody)
   const tilt = (Math.atan2(Math.abs(midSh.x - midHip.x), Math.abs(midHip.y - midSh.y)) * 180) / Math.PI;
   const visL = SIDE_L.reduce((s, i) => s + p[i].v, 0);
   const visR = SIDE_R.reduce((s, i) => s + p[i].v, 0);
-  const [sh, el, wr, hp, kn, an] = (visL >= visR ? SIDE_L : SIDE_R).map((i) => p[i]);
+  // Prefer the side that is fully in frame; fall back to the more visible one.
+  const okL = visible(raw, SIDE_L), okR = visible(raw, SIDE_R);
+  const useL = okL !== okR ? okL : visL >= visR;
+  const [sh, el, wr, hp, kn, an] = (useL ? SIDE_L : SIDE_R).map((i) => p[i]);
   // Distance of the hip from the shoulder-ankle line, positive when it is below the line (image y grows downward).
   const lx = an.x - sh.x, ly = an.y - sh.y;
   const len = Math.hypot(lx, ly) || 1;
