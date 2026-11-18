@@ -38,9 +38,9 @@ export async function handleTokenRequest(req: TokenRequest, fetchImpl: typeof fe
   if (req.method !== "POST") return { status: 405, body: { error: "POST only" } };
   const key = process.env.GEMINI_API_KEY;
   if (!key) return { status: 500, body: { error: "GEMINI_API_KEY is not set on the server" } };
+  if (rateLimited(req.ip)) return { status: 429, body: { error: "too many requests" } };
   const code = process.env.JAX_ACCESS_CODE;
   if (code && header(req.headers, "x-jax-code") !== code) return { status: 401, body: { error: "access code required" } };
-  if (rateLimited(req.ip)) return { status: 429, body: { error: "too many requests" } };
 
   const model = process.env.GEMINI_LIVE_MODEL || DEFAULT_MODEL;
   const now = Date.now();

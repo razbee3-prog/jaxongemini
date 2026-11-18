@@ -132,6 +132,9 @@ await test("token route: method, key, access code, rate limit, upstream", async 
   process.env.GEMINI_API_KEY = "test";
   process.env.JAX_ACCESS_CODE = "letmein";
   assert.equal((await handleTokenRequest(req, ok)).status, 401);
+  let guess = 0;
+  for (let i = 0; i < 12; i++) guess = (await handleTokenRequest({ ...req, ip: "guesser", headers: { "x-jax-code": `g${i}` } }, ok)).status;
+  assert.equal(guess, 429);
   const good = await handleTokenRequest({ ...req, headers: { "x-jax-code": "letmein" } }, ok);
   assert.equal(good.status, 200);
   assert.equal(good.body.token, "auth_tokens/abc");
