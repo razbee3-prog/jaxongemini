@@ -78,10 +78,11 @@ export class LiveClient {
   }
 
   /** Reconnects reuse the current token (it allows several uses) so the session can resume; a failed reuse fetches a new one. */
-  async connect(fresh = true): Promise<void> {
-    this.closedByUser = false;
+  async connect(fresh = true, reconnecting = false): Promise<void> {
+    if (!reconnecting) this.closedByUser = false;
     this.setStatus(this.handle ? "reconnecting" : "connecting");
     if (fresh || !this.tokenInfo) this.tokenInfo = await this.getToken();
+    if (this.closedByUser) return;
     const { token, setup } = this.tokenInfo;
     const ws = new WebSocket(`${WS_BASE}?access_token=${encodeURIComponent(token)}`);
     this.ws = ws;
@@ -132,8 +133,9 @@ export class LiveClient {
     }
     this.setStatus("reconnecting");
     await new Promise((r) => setTimeout(r, Math.min(4000, 300 * 2 ** this.reconnects)));
+    if (this.closedByUser) return;
     try {
-      await this.connect(this.reconnects > 2);
+      await this.connect(this.reconnects > 2, true);
     } catch (e) {
       void this.reconnect(String(e));
     }
