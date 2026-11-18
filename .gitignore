@@ -1,0 +1,7 @@
+node_modules
+dist
+server.mjs
+.env*
+public/mediapipe
+*.local
+.DS_Store
